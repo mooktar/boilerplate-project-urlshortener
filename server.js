@@ -42,9 +42,15 @@ app.get('/api/hello', function(req, res) {
 
 // My API root to set new short url
 app.post("/api/shorturl", (req, res) => {
-  let url;
-  try {
-    url = new URL(req.body.url)
+  const rgx = new RegExp('^(http(s)?:\\/\\/)'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+  
+  const url = req.body.url
+  if (rgx.test(url)) {
     urlModel.findOne({originalUrl: url}, (err, data) => {
       if (err) res.json({ error: err.code })
       if (data) {
@@ -63,7 +69,7 @@ app.post("/api/shorturl", (req, res) => {
         })
       }
     })
-  } catch (_) {
+  } else {
     res.json({ error: 'invalid url' })
   }
 });
